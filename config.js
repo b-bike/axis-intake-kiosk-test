@@ -29,7 +29,7 @@ window.KIOSK_CONFIG = {
   forms: [
     { id: "lefs", title: "TEST: Lower Extremity Functional Scale (LEFS copy)", desc: "Test copy, not a real patient form",
       minutes: 4,
-      url: "",        // TODO: share link of the COPIED form
+      url: "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=K_j3YfnYNkuP-lOlrjcwegvi4db-qHVOrSDQtYnWAY5UN1BIMVRQWDJXVFlKUjZRWEtSSVRYMUNKMi4u&embed=true",   // embed link of the TEST copy
       nameParam: "",  // TODO: question ID of the name question in the copy
       dobParam: "",   // TODO: question ID of the date-of-birth question in the copy
       checkedByDefault: true }
