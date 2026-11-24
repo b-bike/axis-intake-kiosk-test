@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Form submitted</title>
+  <style>
+    body { margin: 0; font: 22px/1.5 system-ui, sans-serif; color: #2b2b2b; background: #faf6e8;
+           display: flex; align-items: center; justify-content: center; min-height: 100vh; text-align: center; }
+    p { margin: 8px 24px; }
+    .small { font-size: 16px; color: #666; }
+  </style>
+</head>
+<body>
+  <div>
+    <p><strong>Thank you.</strong></p>
+    <p id="msg">Moving to the next step&hellip;</p>
+    <p class="small" id="fallback" hidden>If nothing happens, you can close this tab and let the front desk know.</p>
+  </div>
+<script>
+  // The Microsoft Form's thank-you message links here: done.html?f=<form id from config.js>
+  // This page only runs after the patient has reached the thank-you screen, i.e. submitted.
+  (function () {
+    var f = new URLSearchParams(location.search).get("f") || "";
+    var msg = { type: "axis-form-submitted", f: f };
+    // Normal case: this page loaded inside the kiosk's form frame.
+    try { if (window.parent !== window) window.parent.postMessage(msg, location.origin); } catch (e) {}
+    // Fallback: the link opened in its own tab; tell the kiosk tab in this browser.
+    try { var bc = new BroadcastChannel("axis-kiosk"); bc.postMessage(msg); bc.close(); } catch (e) {}
+    // If this is a standalone tab, show a hint after a moment.
+    if (window.parent === window) setTimeout(function () { document.getElementById("fallback").hidden = false; }, 1500);
+  })();
+</script>
+</body>
+</html>
