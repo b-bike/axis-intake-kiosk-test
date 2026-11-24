@@ -1,6 +1,6 @@
 {
-  "name": "AXIS PT Patient Forms",
-  "short_name": "AXIS Forms",
+  "name": "TEST - AXIS PT Patient Forms",
+  "short_name": "TEST Forms",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",
