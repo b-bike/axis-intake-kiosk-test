@@ -22,7 +22,7 @@ window.KIOSK_CONFIG = {
        url        Collect responses > Copy link   (must end up on forms.cloud.microsoft)
        nameParam  from "Get pre-filled link": the part before "=" for the patient-name question
        dobParam   same, for the date-of-birth question
-       The copy's thank-you message can be plain text; no link is needed.
+       The copy's thank-you message can be plain text; no link is needed. */
   namePlaceholder: "PATIENTNAME",
   forms: [
     { id: "lefs", title: "TEST: Lower Extremity Functional Scale (LEFS copy)", desc: "Test copy, not a real patient form",
