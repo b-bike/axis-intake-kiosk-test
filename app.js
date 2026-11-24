@@ -257,11 +257,13 @@
     clearTimeout(slowTimer);
     slowTimer = setTimeout(() => $("frameSlow").classList.remove("hidden"), T.iframeLoadSec * 1000);
     $("formFrame").src = buildFormUrl(f);
-    // requireSubmit: no "Done" button. The patient either submits (the form's thank-you
-    // message links to done.html, which tells this page to move on) or skips.
-    $("nextBtn").classList.toggle("hidden", !!C.requireSubmit);
-    $("formStaffBtn").classList.toggle("hidden", !C.requireSubmit);
-    if (C.requireSubmit) $("formHint").innerHTML = "Use the form's own <strong>Next</strong> buttons, then tap <strong>Submit</strong> at the end. When you see the thank-you message, tap <strong>Tap here to continue</strong>. Or tap <strong>Skip this form</strong>.";
+    // requireSubmit (self-confirm): the patient must either skip, or tap "I finished the form"
+    // and answer "Did you tap Submit and see the check mark?" with Yes. Not verified: it relies
+    // on the patient's answer. (The staff override button is not needed in this mode.)
+    $("nextBtn").classList.remove("hidden");
+    $("nextBtn").textContent = C.requireSubmit ? "I finished the form →" : "Done with this form →";
+    $("formStaffBtn").classList.add("hidden");
+    if (C.requireSubmit) $("formHint").innerHTML = "Use the form's own <strong>Next</strong> buttons, then tap <strong>Submit</strong> at the end and wait for the check mark. Then tap <strong>I finished the form</strong>. Or tap <strong>Skip this form</strong>.";
     show("form");
   }
   if (C.testMode) $("testBanner").classList.remove("hidden");
@@ -281,7 +283,14 @@
 
   // One tap: no "did you submit?" pop-up. The staff summary shows "Next tapped" so
   // staff can check SharePoint for the PDF if anything looks off.
-  $("nextBtn").addEventListener("click", () => { $("formFrame").src = "about:blank"; advance("next"); });
+  $("nextBtn").addEventListener("click", async () => {
+    if (C.requireSubmit) {
+      const ok = await confirmBox("Did you submit the form?", "Did you tap Submit and see the check mark and the thank-you message?", "Yes, I submitted", "No, go back");
+      if (!ok) return;
+      $("formFrame").src = "about:blank"; advance("selfconfirmed"); return;
+    }
+    $("formFrame").src = "about:blank"; advance("next");
+  });
   $("skipBtn").addEventListener("click", async () => {
     const ok = await confirmBox("Skip this form?", "Our staff will go over it with you instead.", "Skip it", "Go back");
     if (!ok) return;
@@ -385,8 +394,8 @@ applyZoom();
 
   /* ---------- Staff summary / unlock / reset ---------- */
   function openSummary() {
-    const label = { done: "Done", next: "Done tapped", submitted: "Submitted (confirmed)", staffdone: "Marked done by staff", skipped: "Skipped", pending: "Not reached", opened: "Opened, not confirmed", incomplete: "Not finished", inprogress: "In progress" };
-    const cls = { done: "done", next: "done", submitted: "done", staffdone: "done", skipped: "skipped", pending: "pending", opened: "pending", incomplete: "skipped", inprogress: "pending" };
+    const label = { done: "Done", next: "Done tapped", submitted: "Submitted (confirmed)", selfconfirmed: "Patient says submitted (not verified)", staffdone: "Marked done by staff", skipped: "Skipped", pending: "Not reached", opened: "Opened, not confirmed", incomplete: "Not finished", inprogress: "In progress" };
+    const cls = { done: "done", next: "done", submitted: "done", selfconfirmed: "done", staffdone: "done", skipped: "skipped", pending: "pending", opened: "pending", incomplete: "skipped", inprogress: "pending" };
     const cur = S.steps[S.idx];
     $("staffDoneBtn").classList.toggle("hidden", !(C.requireSubmit && S.pausedFrom === "form" && cur && cur.type !== "webpt" && S.status[cur.id] === "pending"));
     $("summaryList").innerHTML = S.steps.length
