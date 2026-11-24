@@ -257,8 +257,14 @@
     clearTimeout(slowTimer);
     slowTimer = setTimeout(() => $("frameSlow").classList.remove("hidden"), T.iframeLoadSec * 1000);
     $("formFrame").src = buildFormUrl(f);
+    // requireSubmit: no "Done" button. The patient either submits (the form's thank-you
+    // message links to done.html, which tells this page to move on) or skips.
+    $("nextBtn").classList.toggle("hidden", !!C.requireSubmit);
+    $("formStaffBtn").classList.toggle("hidden", !C.requireSubmit);
+    if (C.requireSubmit) $("formHint").innerHTML = "Use the form's own <strong>Next</strong> buttons, then tap <strong>Submit</strong> at the end. When you see the thank-you message, tap <strong>Tap here to continue</strong>. Or tap <strong>Skip this form</strong>.";
     show("form");
   }
+  if (C.testMode) $("testBanner").classList.remove("hidden");
   // v8: forms load in a credentialless iframe so unsubmitted Microsoft Forms drafts
   // never carry over to the next patient. Warn staff if this Chrome is too old.
   if (!("credentialless" in HTMLIFrameElement.prototype)) {
@@ -280,6 +286,32 @@
     const ok = await confirmBox("Skip this form?", "Our staff will go over it with you instead.", "Skip it", "Go back");
     if (!ok) return;
     $("formFrame").src = "about:blank"; advance("skipped");
+  });
+
+  /* ---------- Submission confirmation (requireSubmit) ----------
+     The form's thank-you message contains a link to done.html?f=<form id>. When the patient
+     taps it, done.html posts {type:"axis-form-submitted", f} to this page (or, if the link
+     opened a new tab, over a BroadcastChannel). Only the thank-you screen shows that link,
+     so receiving the message means the form was submitted. */
+  function onFormSubmitted(fid) {
+    const st = S.steps[S.idx];
+    if (!st || st.type === "webpt" || current !== "form") return;
+    if (fid && fid !== st.id) return;                 // message for a different form: ignore
+    $("formFrame").src = "about:blank"; advance("submitted");
+  }
+  window.addEventListener("message", (e) => {
+    if (e.origin === location.origin && e.data && e.data.type === "axis-form-submitted") onFormSubmitted(e.data.f);
+  });
+  try {
+    new BroadcastChannel("axis-kiosk").onmessage = (e) => {
+      if (e.data && e.data.type === "axis-form-submitted") onFormSubmitted(e.data.f);
+    };
+  } catch (_) {}
+  // Staff escape hatch: patient submitted but the continue link failed. Reached through the
+  // normal staff PIN -> summary screen.
+  $("formStaffBtn").addEventListener("click", () => { S.pausedFrom = "form"; });
+  $("staffDoneBtn").addEventListener("click", () => {
+    S.pausedFrom = ""; $("formFrame").src = "about:blank"; advance("staffdone");
   });
 
   /* ---------- WebPT step (patient) ----------
@@ -352,8 +384,10 @@ applyZoom();
 
   /* ---------- Staff summary / unlock / reset ---------- */
   function openSummary() {
-    const label = { done: "Done", next: "Done tapped", skipped: "Skipped", pending: "Not reached", opened: "Opened, not confirmed", incomplete: "Not finished", inprogress: "In progress" };
-    const cls = { done: "done", next: "done", skipped: "skipped", pending: "pending", opened: "pending", incomplete: "skipped", inprogress: "pending" };
+    const label = { done: "Done", next: "Done tapped", submitted: "Submitted (confirmed)", staffdone: "Marked done by staff", skipped: "Skipped", pending: "Not reached", opened: "Opened, not confirmed", incomplete: "Not finished", inprogress: "In progress" };
+    const cls = { done: "done", next: "done", submitted: "done", staffdone: "done", skipped: "skipped", pending: "pending", opened: "pending", incomplete: "skipped", inprogress: "pending" };
+    const cur = S.steps[S.idx];
+    $("staffDoneBtn").classList.toggle("hidden", !(C.requireSubmit && S.pausedFrom === "form" && cur && cur.type !== "webpt" && S.status[cur.id] === "pending"));
     $("summaryList").innerHTML = S.steps.length
       ? S.steps.map((st, i) => { const s = (S.pausedFrom && i === S.idx && S.status[st.id] === "pending") ? "inprogress" : S.status[st.id]; return `<li><span>${esc(st.title)}</span><span class="tag ${cls[s] || "pending"}">${label[s] || s}</span></li>`; }).join("")
       : "<li>No session data.</li>";
