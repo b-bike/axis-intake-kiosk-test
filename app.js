@@ -293,20 +293,21 @@
      taps it, done.html posts {type:"axis-form-submitted", f} to this page (or, if the link
      opened a new tab, over a BroadcastChannel). Only the thank-you screen shows that link,
      so receiving the message means the form was submitted. */
+  let kbc = null;
+  try { kbc = new BroadcastChannel("axis-kiosk"); } catch (_) {}
   function onFormSubmitted(fid) {
     const st = S.steps[S.idx];
     if (!st || st.type === "webpt" || current !== "form") return;
     if (fid && fid !== st.id) return;                 // message for a different form: ignore
     $("formFrame").src = "about:blank"; advance("submitted");
+    if (kbc) kbc.postMessage({ type: "axis-kiosk-ack", f: st.id });
   }
   window.addEventListener("message", (e) => {
     if (e.origin === location.origin && e.data && e.data.type === "axis-form-submitted") onFormSubmitted(e.data.f);
   });
-  try {
-    new BroadcastChannel("axis-kiosk").onmessage = (e) => {
-      if (e.data && e.data.type === "axis-form-submitted") onFormSubmitted(e.data.f);
-    };
-  } catch (_) {}
+  if (kbc) kbc.onmessage = (e) => {
+    if (e.data && e.data.type === "axis-form-submitted") onFormSubmitted(e.data.f);
+  };
   // Staff escape hatch: patient submitted but the continue link failed. Reached through the
   // normal staff PIN -> summary screen.
   $("formStaffBtn").addEventListener("click", () => { S.pausedFrom = "form"; });
