@@ -9,27 +9,47 @@
     body { margin: 0; font: 22px/1.5 system-ui, sans-serif; color: #2b2b2b; background: #faf6e8;
            display: flex; align-items: center; justify-content: center; min-height: 100vh; text-align: center; }
     p { margin: 8px 24px; }
-    .small { font-size: 16px; color: #666; }
+    .small { font-size: 18px; color: #555; }
   </style>
 </head>
 <body>
   <div>
     <p><strong>Thank you.</strong></p>
-    <p id="msg">Moving to the next step&hellip;</p>
-    <p class="small" id="fallback" hidden>If nothing happens, you can close this tab and let the front desk know.</p>
+    <p id="msg">Checking in&hellip;</p>
+    <p class="small" id="fallback" hidden>Please close this tab and let the front desk know.</p>
   </div>
 <script>
   // The Microsoft Form's thank-you message links here: done.html?f=<form id from config.js>
-  // This page only runs after the patient has reached the thank-you screen, i.e. submitted.
+  // This page only runs after the patient reached the thank-you screen, i.e. submitted.
   (function () {
     var f = new URLSearchParams(location.search).get("f") || "";
     var msg = { type: "axis-form-submitted", f: f };
-    // Normal case: this page loaded inside the kiosk's form frame.
-    try { if (window.parent !== window) window.parent.postMessage(msg, location.origin); } catch (e) {}
-    // Fallback: the link opened in its own tab; tell the kiosk tab in this browser.
-    try { var bc = new BroadcastChannel("axis-kiosk"); bc.postMessage(msg); bc.close(); } catch (e) {}
-    // If this is a standalone tab, show a hint after a moment.
-    if (window.parent === window) setTimeout(function () { document.getElementById("fallback").hidden = false; }, 1500);
+    var msgEl = document.getElementById("msg"), fb = document.getElementById("fallback");
+    var framed = false;
+    try { framed = window.parent !== window; } catch (e) {}
+    // Case 1: loaded inside the kiosk's form frame. The kiosk replaces the frame, so no UI needed.
+    if (framed) { try { window.parent.postMessage(msg, location.origin); } catch (e) {} }
+    // Case 2: opened in its own tab (Microsoft Forms opens links in a new tab). Tell the kiosk tab
+    // in this browser, then wait for its acknowledgement so we can say whether it worked.
+    var bc = null, acked = false;
+    try { bc = new BroadcastChannel("axis-kiosk"); } catch (e) {}
+    if (bc) {
+      bc.onmessage = function (e) {
+        if (e.data && e.data.type === "axis-kiosk-ack" && (!f || e.data.f === f)) {
+          acked = true;
+          msgEl.textContent = "All set. This tab will close.";
+          fb.hidden = true;
+          setTimeout(function () {
+            try { window.close(); } catch (x) {}
+            setTimeout(function () { msgEl.textContent = "All set. You can close this tab and go back to the check-in screen."; }, 800);
+          }, 700);
+        }
+      };
+      bc.postMessage(msg);
+    }
+    if (!framed) setTimeout(function () {
+      if (!acked) { msgEl.textContent = "We could not reach the check-in screen."; fb.hidden = false; }
+    }, 3000);
   })();
 </script>
 </body>
