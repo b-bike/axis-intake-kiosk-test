@@ -1,13 +1,13 @@
 /* ============================================================
    Axis PT Intake Kiosk — TEST CONFIGURATION (single form)
    This is a TEST COPY of the live kiosk. It has one form, a "requireSubmit" mode
-   (no Done button; the form's thank-you link confirms submission), and a red TEST banner.
+   (after the form the patient taps "I finished the form" and confirms "Did you submit?"; not verified), and a red TEST banner.
    REMINDER: this repo is PUBLIC. Never put patient data,
    passwords, or private links that grant edit access in here.
    ============================================================ */
 window.KIOSK_CONFIG = {
   testMode: true,            // shows the red TEST banner
-  requireSubmit: true,       // patient must submit (then tap the thank-you link) or skip. No Done button.
+  requireSubmit: true,       // patient must confirm they submitted (Yes/No question, unverified) or skip
 
   clinicName: "AXIS Physical Therapy",
   logo: "https://axisptutah.com/images/logo-nav.png",
@@ -22,9 +22,7 @@ window.KIOSK_CONFIG = {
        url        Collect responses > Copy link   (must end up on forms.cloud.microsoft)
        nameParam  from "Get pre-filled link": the part before "=" for the patient-name question
        dobParam   same, for the date-of-birth question
-     The copy's thank-you message must contain this link:
-       Tap here to continue: https://b-bike.github.io/axis-intake-kiosk-test/done.html?f=lefs
-     The "f=lefs" part must match the form id below. */
+       The copy's thank-you message can be plain text; no link is needed.
   namePlaceholder: "PATIENTNAME",
   forms: [
     { id: "lefs", title: "TEST: Lower Extremity Functional Scale (LEFS copy)", desc: "Test copy, not a real patient form",
