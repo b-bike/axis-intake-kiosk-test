@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="robots" content="noindex, nofollow">
   <meta name="referrer" content="no-referrer">
-  <title>Axis PT — Patient Forms</title>
+  <title>TEST — Axis PT Patient Forms</title>
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#faf6e8">
   <link rel="icon" href="icon-192.png">
@@ -15,6 +15,7 @@
 </head>
 <body>
   <div id="offline" class="banner hidden" role="alert">No internet connection. Please let the front desk know.</div>
+  <div id="testBanner" class="banner hidden" role="status" style="background:#fde7e7;color:#8a1f1f">TEST SITE — not the live kiosk. Nothing here is a real patient visit.</div>
 
   <!-- 1. Idle / welcome -->
   <section id="s-idle" class="screen active" aria-label="Welcome">
@@ -104,9 +105,10 @@
       <img class="logo-sm" data-logo alt="">
       <div class="title"><span class="step" id="stepLabel"></span><strong id="formTitle"></strong></div>
       <button class="btn secondary small" id="zoomBtn" aria-pressed="false">Enlarge</button>
+      <button class="btn ghost small hidden" id="formStaffBtn" data-staff>🔒 Staff</button>
     </header>
     <div class="progress" aria-hidden="true"><div id="progressFill"></div></div>
-    <p class="hint">Use the form's own <strong>Next</strong> buttons to move through it, tap <strong>Submit</strong> at the end, then tap <strong>Done with this form</strong>.</p>
+    <p class="hint" id="formHint">Use the form's own <strong>Next</strong> buttons to move through it, tap <strong>Submit</strong> at the end, then tap <strong>Done with this form</strong>.</p>
     <div class="frame-wrap">
       <div class="loading" id="frameLoading"><div class="spinner"></div><p>Loading form…</p>
         <p class="muted hidden" id="frameSlow">Taking longer than usual. <button class="btn ghost small" id="frameRetry">Try again</button> or let the front desk know.</p></div>
@@ -197,7 +199,7 @@
     <header class="bar"><img class="logo-sm" data-logo alt=""><span>Session summary</span></header>
     <div class="scroll"><div class="card"><ul id="summaryList" class="summary"></ul>
       <p class="muted">Skipped or unconfirmed forms were not recorded anywhere else — follow up before the visit. Check SharePoint for the saved PDFs.</p></div></div>
-    <footer class="actions split"><button class="btn secondary big hidden" id="resumeBtn">Unlock &amp; continue</button><button class="btn primary big" id="resetBtn">Clear &amp; reset for next patient</button></footer>
+    <footer class="actions split"><button class="btn secondary big hidden" id="staffDoneBtn">Patient submitted — continue</button><button class="btn secondary big hidden" id="resumeBtn">Unlock &amp; continue</button><button class="btn primary big" id="resetBtn">Clear &amp; reset for next patient</button></footer>
   </section>
 
   <!-- Modal -->
